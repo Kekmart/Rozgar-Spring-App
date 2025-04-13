@@ -1,14 +1,13 @@
-# Use official JDK image
-FROM eclipse-temurin:17-jdk
-
-# Set working directory
+# First stage: build the application
+FROM maven:3.9.6-eclipse-temurin-17 as build
 WORKDIR /app
+COPY pom.xml .
+COPY src ./src
+RUN mvn clean package -DskipTests
 
-# Copy the JAR file into the image
-COPY target/rozgar-0.0.1-SNAPSHOT.jar app.jar
-
-# Expose the Spring Boot default port
+# Second stage: run the app
+FROM eclipse-temurin:17-jdk
+WORKDIR /app
+COPY --from=build /app/target/*.jar app.jar
 EXPOSE 8080
-
-# Run the JAR
-ENTRYPOINT ["java", "-jar", "app.jar"]
+CMD ["java", "-jar", "app.jar"]
